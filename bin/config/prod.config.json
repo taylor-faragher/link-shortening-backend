@@ -1,0 +1,6 @@
+{
+    "env": "dev",
+    "region": "us-east-1",
+    "lambdaFunctionName": "LinkShorteningProdHandler",
+    "restApiName": "LinkShorteningProdHandler"
+}

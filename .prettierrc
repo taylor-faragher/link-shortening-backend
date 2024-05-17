@@ -1,0 +1,7 @@
+trailingComma: es5
+singleQuote: true
+jsxSingleQuote: true
+printWidth: 120
+tabWidth: 4
+bracketSpacing: false
+arrowParens: avoid

@@ -1,0 +1,32 @@
+{
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 2021,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "jsx": true
+        }
+    },
+    "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended"
+    ],
+    "overrides": [
+        {
+            "files": ["*.ts"],
+            "rules": {
+                "@typescirpt-eslint/no-explicit-any": "off"
+            }
+        }
+    ],
+    "rules": {
+        "indent": "error",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "ignoreRestSiblings": true,
+                "argsIgnorePattern": "^_"
+            }
+        ]
+    }
+}
