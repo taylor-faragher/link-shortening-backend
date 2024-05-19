@@ -9,7 +9,7 @@ interface LinkShorteningStackProps extends StackProps {
 export class LinkShorteningStack extends Stack {
     constructor(parent: App, id: string, props: LinkShorteningStackProps) {
         super(parent, id, props);
-        new DataBaseStack(this, `DataBaseStack-${props.env}`);
+        new DataBaseStack(this, `DataBaseStack`);
 
         new LambdaStack(this, `LinkShorteningLambdaStack${props.env}`);
     }
