@@ -1,5 +1,12 @@
 import {Stack} from 'aws-cdk-lib';
-import {LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi, IResource} from 'aws-cdk-lib/aws-apigateway';
+import {
+    LambdaIntegration,
+    MockIntegration,
+    PassthroughBehavior,
+    RestApi,
+    IResource,
+    EndpointType,
+} from 'aws-cdk-lib/aws-apigateway';
 import {Runtime} from 'aws-cdk-lib/aws-lambda';
 import {NodejsFunction, NodejsFunctionProps} from 'aws-cdk-lib/aws-lambda-nodejs';
 import {Construct} from 'constructs';
@@ -48,7 +55,10 @@ export class LambdaStack extends Construct {
 
         // Create an API Gateway resource for each of the CRUD operations
         const api = new RestApi(this, 'itemsApi', {
-            restApiName: 'Items Service',
+            restApiName: 'LinkShorteningApi',
+            endpointConfiguration: {
+                types: [EndpointType.REGIONAL],
+            },
         });
 
         const items = api.root.addResource('link');
