@@ -10,7 +10,7 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
 
     try {
         //POST code
-        return {statusCode: 200, body: `Created id ${linkId} for item: ${item}`};
+        return {statusCode: 200, body: `Created id ${linkId} for item: ${JSON.stringify(item.url)}`};
     } catch (dbError) {
         const errorResponse = 'database error';
         return {statusCode: 500, body: errorResponse};
