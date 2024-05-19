@@ -46,7 +46,7 @@ export class DataBaseStack extends Construct {
             `Allow port ${port} for database connection from only within the VPC (${myVpc.vpcId})`
         );
 
-        new DatabaseInstance(this, 'TestDatabase', {
+        new DatabaseInstance(this, `${dbName}`, {
             vpc: myVpc,
             vpcSubnets: {subnetType: SubnetType.PUBLIC},
             instanceType,
@@ -57,7 +57,7 @@ export class DataBaseStack extends Construct {
             credentials: Credentials.fromSecret(masterUserSecret),
             backupRetention: Duration.days(0), // disable automatic DB snapshot retention
             deleteAutomatedBackups: true,
-            removalPolicy: RemovalPolicy.DESTROY,
+            removalPolicy: RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
         });
     }
 }
