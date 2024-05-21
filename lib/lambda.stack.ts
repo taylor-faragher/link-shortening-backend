@@ -1,4 +1,4 @@
-import {Stack} from 'aws-cdk-lib';
+import {Stack, StackProps} from 'aws-cdk-lib';
 import {
     LambdaIntegration,
     MockIntegration,
@@ -7,15 +7,37 @@ import {
     IResource,
     EndpointType,
 } from 'aws-cdk-lib/aws-apigateway';
+import { ManagedPolicy, ServicePrincipal, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
+import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import {Runtime} from 'aws-cdk-lib/aws-lambda';
 import {NodejsFunction, NodejsFunctionProps} from 'aws-cdk-lib/aws-lambda-nodejs';
 import {Construct} from 'constructs';
 import * as path from 'path';
 
+interface LambdaStackProps extends StackProps {
+    myVpc: Vpc;
+}
+
 export class LambdaStack extends Construct {
-    constructor(parent: Stack, id: string) {
+    constructor(parent: Stack, id: string, props: LambdaStackProps) {
         super(parent, id);
         const stackPrefix = 'LinkShortener';
+
+        const policyStatement = new PolicyStatement({
+            actions: ['secretsmanager:GetSecretValue'],
+            resources: [`arn:aws:secretsmanager:us-east-1:${props?.env?.account}:secret:db-master-user-secret-*`], // specify the secret ARN
+        })
+
+        const lambdaIamRole = new Role(this, 'LinkShortenerLambdaIamRole', {
+            roleName: 'LinkShortenerLambdaIamRole',
+            assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+            managedPolicies: [
+                ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
+                ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
+            ]
+        })
+
+        lambdaIamRole.addToPolicy(policyStatement);
 
         const nodeJsFunctionProps: NodejsFunctionProps = {
             bundling: {
@@ -23,7 +45,10 @@ export class LambdaStack extends Construct {
             },
             depsLockFilePath: path.join(__dirname, '../', 'yarn.lock'),
             runtime: Runtime.NODEJS_20_X,
+            role: lambdaIamRole,
+            vpc: props.myVpc
         };
+        
 
         // Create a Lambda function for each of the CRUD operations
         const createLinkLambda = new NodejsFunction(this, 'createLinkFunction', {

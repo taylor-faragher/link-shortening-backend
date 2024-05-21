@@ -1,14 +1,5 @@
-import {Duration, RemovalPolicy} from 'aws-cdk-lib';
-import {
-    InstanceClass,
-    InstanceSize,
-    InstanceType,
-    Peer,
-    Port,
-    SecurityGroup,
-    SubnetType,
-    Vpc,
-} from 'aws-cdk-lib/aws-ec2';
+import {Duration, RemovalPolicy, StackProps} from 'aws-cdk-lib';
+import {InstanceClass, InstanceSize, InstanceType, Peer, Port, SecurityGroup, Vpc} from 'aws-cdk-lib/aws-ec2';
 import {
     Credentials,
     DatabaseInstance,
@@ -18,8 +9,12 @@ import {
 } from 'aws-cdk-lib/aws-rds';
 import {Construct} from 'constructs';
 
+interface DataBaseStackProps extends StackProps {
+    myVpc: Vpc;
+}
+
 export class DataBaseStack extends Construct {
-    constructor(scope: Construct, id: string) {
+    constructor(scope: Construct, id: string, props: DataBaseStackProps) {
         super(scope, id);
 
         const engine = DatabaseInstanceEngine.postgres({version: PostgresEngineVersion.VER_16_2});
@@ -33,39 +28,19 @@ export class DataBaseStack extends Construct {
             username: 'faragher6',
         });
 
-        const myVpc = new Vpc(this, 'LinkShortenerVPC', {
-            subnetConfiguration: [
-                {
-                    cidrMask: 24,
-                    name: 'ingress',
-                    subnetType: SubnetType.PUBLIC,
-                },
-                {
-                    cidrMask: 24,
-                    name: 'compute',
-                    subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-                },
-                {
-                    cidrMask: 28,
-                    name: 'rds',
-                    subnetType: SubnetType.PRIVATE_ISOLATED,
-                },
-            ],
-        });
-
         const databaseSecurityGroup = new SecurityGroup(this, 'DatabaseSecurityGroup', {
             securityGroupName: 'DatabaseSecurityGroup',
-            vpc: myVpc,
+            vpc: props.myVpc,
         });
 
         databaseSecurityGroup.addIngressRule(
-            Peer.ipv4(myVpc.vpcCidrBlock),
+            Peer.ipv4(props.myVpc.vpcCidrBlock),
             Port.tcp(port),
-            `Allow port ${port} for database connection from only within the VPC (${myVpc.vpcId})`
+            `Allow port ${port} for database connection from only within the VPC (${props.myVpc.vpcId})`
         );
 
         new DatabaseInstance(this, `${dbName}`, {
-            vpc: myVpc,
+            vpc: props.myVpc,
             instanceType,
             engine,
             port,
