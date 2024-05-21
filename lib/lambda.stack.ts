@@ -15,6 +15,7 @@ import * as path from 'path';
 export class LambdaStack extends Construct {
     constructor(parent: Stack, id: string) {
         super(parent, id);
+        const stackPrefix = 'LinkShortener';
 
         const nodeJsFunctionProps: NodejsFunctionProps = {
             bundling: {
@@ -27,22 +28,27 @@ export class LambdaStack extends Construct {
         // Create a Lambda function for each of the CRUD operations
         const createLinkLambda = new NodejsFunction(this, 'createLinkFunction', {
             entry: path.join(__dirname, '../handlers/lambdas', 'createLink.ts'),
+            functionName: `${stackPrefix}_createLink`,
             ...nodeJsFunctionProps,
         });
         const retrieveLinkLambda = new NodejsFunction(this, 'retrieveLinkFunction', {
             entry: path.join(__dirname, '../handlers/lambdas', 'retrieveLink.ts'),
+            functionName: `${stackPrefix}_retrieveLink`,
             ...nodeJsFunctionProps,
         });
         const retrieveAllLinkLambda = new NodejsFunction(this, 'retrieveAllLinkFunction', {
             entry: path.join(__dirname, '../handlers/lambdas', 'retrieveAllLink.ts'),
+            functionName: `${stackPrefix}_retrieveAllLink`,
             ...nodeJsFunctionProps,
         });
         const updateLinkLambda = new NodejsFunction(this, 'updateLinkFunction', {
             entry: path.join(__dirname, '../handlers/lambdas', 'updateLink.ts'),
+            functionName: `${stackPrefix}_updateLink`,
             ...nodeJsFunctionProps,
         });
         const deleteLinkLambda = new NodejsFunction(this, 'deleteLinkFunction', {
             entry: path.join(__dirname, '../handlers/lambdas', 'deleteLink.ts'),
+            functionName: `${stackPrefix}_deleteLink`,
             ...nodeJsFunctionProps,
         });
 
@@ -54,7 +60,7 @@ export class LambdaStack extends Construct {
         const deleteLinkIntegration = new LambdaIntegration(deleteLinkLambda);
 
         // Create an API Gateway resource for each of the CRUD operations
-        const api = new RestApi(this, 'itemsApi', {
+        const api = new RestApi(this, 'LinkShorteningApiGateway', {
             restApiName: 'LinkShorteningApi',
             endpointConfiguration: {
                 types: [EndpointType.REGIONAL],

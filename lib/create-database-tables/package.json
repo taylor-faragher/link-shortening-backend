@@ -1,0 +1,16 @@
+{
+    "name": "link-shortening-table-creation",
+    "version": "1.0.0",
+    "description": "Code to create database tables in Link Shortening backend",
+    "main": "index.js",
+    "scripts": {
+        "local": "lambda-local -l index.js -h handler --watch 8008 --timeout 10000"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.1624.0",
+        "mysql": "2.18.1"
+    },
+    "devDependencies": {
+        "lambda-local": "^2.2.0"
+    }
+}

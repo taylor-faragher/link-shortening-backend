@@ -11,6 +11,6 @@ export class LinkShorteningStack extends Stack {
         super(parent, id, props);
         new DataBaseStack(this, `DataBaseStack`);
 
-        new LambdaStack(this, `LinkShorteningLambdaStack${props.env}`);
+        new LambdaStack(this, `LinkShorteningLambdaStack`);
     }
 }

@@ -9,7 +9,7 @@ const env = app.node.tryGetContext('env') || 'dev';
 
 const config = getCdkConfig(env);
 
-new LinkShorteningStack(app, `LinkShorteningStack-${env}`, {
+new LinkShorteningStack(app, `LinkShorteningStack`, {
     customConfig: config,
     env: {
         account: process.env.AWS_ACCOUNT_NUMBER,

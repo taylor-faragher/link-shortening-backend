@@ -1,4 +1,4 @@
-import {Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
+import {Duration, RemovalPolicy} from 'aws-cdk-lib';
 import {
     InstanceClass,
     InstanceSize,
@@ -9,31 +9,49 @@ import {
     SubnetType,
     Vpc,
 } from 'aws-cdk-lib/aws-ec2';
-import {Credentials, DatabaseInstance, DatabaseInstanceEngine, PostgresEngineVersion} from 'aws-cdk-lib/aws-rds';
-import {Secret} from 'aws-cdk-lib/aws-secretsmanager';
+import {
+    Credentials,
+    DatabaseInstance,
+    DatabaseInstanceEngine,
+    DatabaseSecret,
+    PostgresEngineVersion,
+} from 'aws-cdk-lib/aws-rds';
 import {Construct} from 'constructs';
 
 export class DataBaseStack extends Construct {
-    constructor(parent: Stack, id: string) {
-        super(parent, id);
+    constructor(scope: Construct, id: string) {
+        super(scope, id);
 
         const engine = DatabaseInstanceEngine.postgres({version: PostgresEngineVersion.VER_16_2});
         const instanceType = InstanceType.of(InstanceClass.T3, InstanceSize.MICRO);
         const port = 5432;
         const dbName = 'TestDataBase';
+        const credsName = 'db-master-user-secret';
 
-        const masterUserSecret = new Secret(this, 'master-secret', {
-            secretName: 'db-master-user-secret',
-            description: 'Database master user credentials',
-            generateSecretString: {
-                secretStringTemplate: JSON.stringify({username: 'faragher6'}),
-                generateStringKey: 'password',
-                passwordLength: 16,
-                excludePunctuation: true,
-            },
+        const creds = new DatabaseSecret(this, 'PostGreSQLRdsCredentials', {
+            secretName: credsName,
+            username: 'faragher6',
         });
 
-        const myVpc = Vpc.fromLookup(this, 'my-vpc', {vpcId: 'vpc-09e16c7a60f69c143'});
+        const myVpc = new Vpc(this, 'LinkShortenerVPC', {
+            subnetConfiguration: [
+                {
+                    cidrMask: 24,
+                    name: 'ingress',
+                    subnetType: SubnetType.PUBLIC,
+                },
+                {
+                    cidrMask: 24,
+                    name: 'compute',
+                    subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+                },
+                {
+                    cidrMask: 28,
+                    name: 'rds',
+                    subnetType: SubnetType.PRIVATE_ISOLATED,
+                },
+            ],
+        });
 
         const databaseSecurityGroup = new SecurityGroup(this, 'DatabaseSecurityGroup', {
             securityGroupName: 'DatabaseSecurityGroup',
@@ -48,16 +66,36 @@ export class DataBaseStack extends Construct {
 
         new DatabaseInstance(this, `${dbName}`, {
             vpc: myVpc,
-            vpcSubnets: {subnetType: SubnetType.PUBLIC},
             instanceType,
             engine,
             port,
             securityGroups: [databaseSecurityGroup],
             databaseName: dbName,
-            credentials: Credentials.fromSecret(masterUserSecret),
+            credentials: Credentials.fromSecret(creds),
             backupRetention: Duration.days(0), // disable automatic DB snapshot retention
             deleteAutomatedBackups: true,
             removalPolicy: RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
+            instanceIdentifier: dbName,
         });
+
+        // const initializer = new CustomResourceStack(this, 'CreateDatabaseTables', {
+        //     config: {
+        //         credsName,
+        //     },
+        //     fnLogRetention: RetentionDays.FIVE_MONTHS,
+        //     fnCode: DockerImageCode.fromImageAsset(`${__dirname}/create-database-tables`, {}),
+        //     fnTimeout: Duration.minutes(2),
+        //     fnSecurityGroups: [],
+        //     vpc: myVpc,
+        //     subnetsSelection: myVpc.selectSubnets({
+        //         subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+        //     }),
+        // });
+
+        // initializer.customResource.node.addDependency(linkDatabase);
+
+        // linkDatabase.connections.allowFrom(initializer.function, Port.tcp(port));
+
+        // creds.grantRead(initializer.function);
     }
 }
