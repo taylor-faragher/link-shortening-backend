@@ -1,7 +1,7 @@
 import {App, Stack, StackProps} from 'aws-cdk-lib';
 import {DataBaseStack} from './database.stack';
 import {LambdaStack} from './lambda.stack';
-import { SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
+import {SubnetType, Vpc} from 'aws-cdk-lib/aws-ec2';
 
 interface LinkShorteningStackProps extends StackProps {
     customConfig: Record<string, string>;
@@ -12,6 +12,8 @@ export class LinkShorteningStack extends Stack {
         super(parent, id, props);
 
         const myVpc = new Vpc(this, 'LinkShortenerVPC', {
+            maxAzs: 2,
+            natGateways: 1,
             subnetConfiguration: [
                 {
                     cidrMask: 24,
@@ -23,16 +25,11 @@ export class LinkShorteningStack extends Stack {
                     name: 'compute',
                     subnetType: SubnetType.PRIVATE_WITH_EGRESS,
                 },
-                {
-                    cidrMask: 28,
-                    name: 'rds',
-                    subnetType: SubnetType.PRIVATE_ISOLATED,
-                },
             ],
         });
-        
+
         new DataBaseStack(this, `DataBaseStack`, {
-            myVpc
+            myVpc,
         });
 
         new LambdaStack(this, `LinkShorteningLambdaStack`, {
