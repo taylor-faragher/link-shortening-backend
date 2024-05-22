@@ -1,13 +1,26 @@
-import {Duration, RemovalPolicy, StackProps} from 'aws-cdk-lib';
-import {InstanceClass, InstanceSize, InstanceType, Peer, Port, SecurityGroup, Vpc} from 'aws-cdk-lib/aws-ec2';
+import {CfnOutput, Duration, RemovalPolicy, StackProps, Token} from 'aws-cdk-lib';
+import {
+    InstanceClass,
+    InstanceSize,
+    InstanceType,
+    Peer,
+    Port,
+    SecurityGroup,
+    SubnetType,
+    Vpc,
+} from 'aws-cdk-lib/aws-ec2';
 import {
     Credentials,
     DatabaseInstance,
     DatabaseInstanceEngine,
     DatabaseSecret,
+    ParameterGroup,
     PostgresEngineVersion,
 } from 'aws-cdk-lib/aws-rds';
 import {Construct} from 'constructs';
+import {CustomResourceStack} from './customResource.stack';
+import {RetentionDays} from 'aws-cdk-lib/aws-logs';
+import {DockerImageCode} from 'aws-cdk-lib/aws-lambda';
 
 interface DataBaseStackProps extends StackProps {
     myVpc: Vpc;
@@ -39,11 +52,20 @@ export class DataBaseStack extends Construct {
             `Allow port ${port} for database connection from only within the VPC (${props.myVpc.vpcId})`
         );
 
-        new DatabaseInstance(this, `${dbName}`, {
+        const parameterGroup = new ParameterGroup(this, 'parameter-group', {
+            engine,
+            parameters: {
+                'rds.force_ssl': '0',
+            },
+        });
+
+        const linkDatabase = new DatabaseInstance(this, `${dbName}`, {
             vpc: props.myVpc,
+            vpcSubnets: {subnetType: SubnetType.PRIVATE_WITH_EGRESS},
             instanceType,
             engine,
             port,
+            parameterGroup,
             securityGroups: [databaseSecurityGroup],
             databaseName: dbName,
             credentials: Credentials.fromSecret(creds),
@@ -53,24 +75,28 @@ export class DataBaseStack extends Construct {
             instanceIdentifier: dbName,
         });
 
-        // const initializer = new CustomResourceStack(this, 'CreateDatabaseTables', {
-        //     config: {
-        //         credsName,
-        //     },
-        //     fnLogRetention: RetentionDays.FIVE_MONTHS,
-        //     fnCode: DockerImageCode.fromImageAsset(`${__dirname}/create-database-tables`, {}),
-        //     fnTimeout: Duration.minutes(2),
-        //     fnSecurityGroups: [],
-        //     vpc: myVpc,
-        //     subnetsSelection: myVpc.selectSubnets({
-        //         subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-        //     }),
-        // });
+        const initializer = new CustomResourceStack(this, 'CreateDatabaseTables', {
+            config: {
+                credsName,
+            },
+            fnLogRetention: RetentionDays.FIVE_MONTHS,
+            fnCode: DockerImageCode.fromImageAsset(`${__dirname}/create-database-tables`, {}),
+            fnTimeout: Duration.minutes(2),
+            fnSecurityGroups: [],
+            vpc: props.myVpc,
+            subnetsSelection: props.myVpc.selectSubnets({
+                subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+            }),
+        });
 
-        // initializer.customResource.node.addDependency(linkDatabase);
+        initializer.customResource.node.addDependency(linkDatabase);
 
-        // linkDatabase.connections.allowFrom(initializer.function, Port.tcp(port));
+        linkDatabase.connections.allowFrom(initializer.function, Port.tcp(port));
 
-        // creds.grantRead(initializer.function);
+        creds.grantRead(initializer.function);
+
+        new CfnOutput(this, 'RdsInitFnResponse', {
+            value: Token.asString(initializer.response),
+        });
     }
 }
