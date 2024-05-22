@@ -8,7 +8,7 @@
     },
     "dependencies": {
         "aws-sdk": "^2.1624.0",
-        "mysql": "2.18.1"
+        "pg": "8.11.5"
     },
     "devDependencies": {
         "lambda-local": "^2.2.0"
