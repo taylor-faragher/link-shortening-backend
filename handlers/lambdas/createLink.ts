@@ -13,11 +13,6 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
 
     const item = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
     const linkId = getRandomValue();
-    console.log('generated linkid: ', linkId);
-    console.log('host: ', host);
-    console.log('dbname: ', dbname);
-    console.log('username: ', username);
-    console.log('password: ', password);
 
     await using client = await connect({
         user: username,
@@ -25,33 +20,18 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
         database: dbname,
         password: password,
     });
-    console.log('connected successfully');
-
-    const query =
-        'CREATE TABLE IF NOT EXISTS Links(id SERIAL PRIMARY KEY,url VARCHAR(2048) NOT NULL,description TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)';
 
     try {
-        const result = await client.query(query);
+        const result = await client.query('SELECT * FROM Links');
         return {
             statusCode: 200,
-            body: `Created id ${linkId} for item: ${JSON.stringify(item.url)}. Also here are the results: ${result}`,
+            body: `Created id ${linkId} for item: ${JSON.stringify(item.url)}. Also here are the results: ${JSON.stringify(result)}`,
         };
     } catch (dbError) {
         const errorResponse = 'database error';
         return {statusCode: 500, body: errorResponse};
     }
 };
-
-// const getSecretValue = secretId => {
-//     return new Promise((resolve, reject) => {
-//         secrets.getSecretValue({SecretId: secretId}, (err, data) => {
-//             if (err) return reject(err);
-//             if (data.SecretString) {
-//                 return resolve(JSON.parse(data.SecretString));
-//             }
-//         });
-//     });
-// };
 
 const getSecretValue = async secret => {
     const data = await secrets.getSecretValue({SecretId: secret});
