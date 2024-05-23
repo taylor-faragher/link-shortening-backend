@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS "UserToLinkId" (
+CREATE TABLE IF NOT EXISTS usertolinkid (
         user_id INTEGER NOT NULL,
         link_id INTEGER NOT NULL,
         PRIMARY KEY (user_id, link_id),
