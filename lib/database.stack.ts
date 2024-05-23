@@ -33,8 +33,8 @@ export class DataBaseStack extends Construct {
         const engine = DatabaseInstanceEngine.postgres({version: PostgresEngineVersion.VER_16_2});
         const instanceType = InstanceType.of(InstanceClass.T3, InstanceSize.MICRO);
         const port = 5432;
-        const dbName = 'TestDataBase';
-        const credsName = 'db-master-user-secret';
+        const dbName = 'LinkShorteningDatabase';
+        const credsName = 'LinkShortenerMasterSecret';
 
         const creds = new DatabaseSecret(this, 'PostGreSQLRdsCredentials', {
             secretName: credsName,
@@ -77,7 +77,7 @@ export class DataBaseStack extends Construct {
 
         const initializer = new CustomResourceStack(this, 'CreateDatabaseTables', {
             config: {
-                credsName,
+                SecretId: credsName,
             },
             fnLogRetention: RetentionDays.FIVE_MONTHS,
             fnCode: DockerImageCode.fromImageAsset(`${__dirname}/create-database-tables`, {}),
