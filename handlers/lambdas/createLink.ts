@@ -22,13 +22,13 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     });
 
     try {
-        const result = await client.query('SELECT * FROM Links');
+        const result = await client.query('SELECT * FROM links');
         return {
             statusCode: 200,
             body: `Created id ${linkId} for item: ${JSON.stringify(item.url)}. Also here are the results: ${JSON.stringify(result)}`,
         };
     } catch (dbError) {
-        const errorResponse = 'database error';
+        const errorResponse = `database error: ${dbError}`;
         return {statusCode: 500, body: errorResponse};
     }
 };
