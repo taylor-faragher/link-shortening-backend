@@ -12,6 +12,7 @@ export interface CustomResourceStackProps {
     fnSecurityGroups: ISecurityGroup[];
     fnTimeout: Duration;
     fnCode: DockerImageCode;
+    account: string;
     fnLogRetention: RetentionDays;
     fnMemorySize?: number;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,12 +34,29 @@ export class CustomResourceStack extends Construct {
             allowAllOutbound: true,
         });
 
+        const policyStatement = new PolicyStatement({
+            actions: ['secretsmanager:GetSecretValue'],
+            resources: [`arn:aws:secretsmanager:us-east-1:${props.account}:secret:LinkShortenerMasterSecret-*`],
+        });
+
+        const lambdaIamRole = new Role(this, 'LinkShortenerLambdaIamRole', {
+            roleName: 'CustomResourceStackRole',
+            assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+            managedPolicies: [
+                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole'),
+            ],
+        });
+
+        lambdaIamRole.addToPolicy(policyStatement);
+
         const customResource = new DockerImageFunction(this, 'ResourceInitializerFn', {
             memorySize: props.fnMemorySize || 128,
             functionName: `CustomResourceStack-${id}`,
             code: props.fnCode,
-            vpcSubnets: props.vpc.selectSubnets(props.subnetsSelection),
+            vpcSubnets: props.subnetsSelection,
             vpc: props.vpc,
+            role: lambdaIamRole,
             securityGroups: [CustomResourceSecurityGroup, ...props.fnSecurityGroups],
             timeout: props.fnTimeout,
             logRetention: props.fnLogRetention,

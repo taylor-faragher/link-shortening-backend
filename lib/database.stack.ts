@@ -1,4 +1,4 @@
-import {CfnOutput, Duration, RemovalPolicy, StackProps, Token} from 'aws-cdk-lib';
+import {CfnOutput, Duration, RemovalPolicy, Stack, StackProps, Token} from 'aws-cdk-lib';
 import {
     InstanceClass,
     InstanceSize,
@@ -27,8 +27,8 @@ interface DataBaseStackProps extends StackProps {
 }
 
 export class DataBaseStack extends Construct {
-    constructor(scope: Construct, id: string, props: DataBaseStackProps) {
-        super(scope, id);
+    constructor(parent: Stack, id: string, props: DataBaseStackProps) {
+        super(parent, id);
 
         const engine = DatabaseInstanceEngine.postgres({version: PostgresEngineVersion.VER_16_2});
         const instanceType = InstanceType.of(InstanceClass.T3, InstanceSize.MICRO);
@@ -79,6 +79,7 @@ export class DataBaseStack extends Construct {
             config: {
                 SecretId: credsName,
             },
+            account: parent.account,
             fnLogRetention: RetentionDays.FIVE_MONTHS,
             fnCode: DockerImageCode.fromImageAsset(`${__dirname}/create-database-tables`, {}),
             fnTimeout: Duration.minutes(2),

@@ -9,7 +9,7 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     if (!event.body) {
         return {statusCode: 400, body: 'invalid request, you are missing the parameter body'};
     }
-    const {password, username, host, dbname} = await getSecretValue('db-master-user-secret');
+    const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
 
     const item = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
     const linkId = getRandomValue();

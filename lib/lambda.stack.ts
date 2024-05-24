@@ -25,7 +25,7 @@ export class LambdaStack extends Construct {
 
         const policyStatement = new PolicyStatement({
             actions: ['secretsmanager:GetSecretValue'],
-            resources: [`arn:aws:secretsmanager:us-east-1:${parent.account}:secret:db-master-user-secret-*`],
+            resources: [`arn:aws:secretsmanager:us-east-1:${parent.account}:secret:LinkShortenerMasterSecret-*`],
         });
 
         const lambdaIamRole = new Role(this, 'LinkShortenerLambdaIamRole', {
