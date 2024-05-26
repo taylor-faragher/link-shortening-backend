@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS linkuser (
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL UNIQUE,
+        profileInfo JSONB NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         profile_info JSONB
     );
