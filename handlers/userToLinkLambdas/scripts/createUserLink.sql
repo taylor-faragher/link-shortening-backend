@@ -1,0 +1,1 @@
+INSERT INTO linkuseridtolinksid (user_id, link_id) VALUES (1, 1);
