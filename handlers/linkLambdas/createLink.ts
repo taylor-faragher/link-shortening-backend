@@ -1,6 +1,6 @@
 import {connect} from 'ts-postgres';
 import {LinkShorteningResponse} from '../../lib/types/types';
-import {getRandomValue} from '../utils/getRandomValue';
+import {createLinkId} from '../utils/createLinkId';
 import {getSecretValue} from '../utils/getSecretValue';
 import {countUserLinks} from '../utils/countUserLinks';
 
@@ -29,7 +29,7 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
         return {statusCode: 400, body: `We're sorry. You have created too many links.`};
     }
 
-    const linkId = await getRandomValue(client);
+    const linkId = await createLinkId(client);
 
     const linkQuery = `
         INSERT INTO links (link_id, link_url, description)

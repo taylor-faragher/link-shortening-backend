@@ -1,6 +1,6 @@
 const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-export const getRandomValue = async (client): Promise<string> => {
+export const createLinkId = async (client): Promise<string> => {
     const idQuery = `
         SELECT link_id from links
         WHERE link_id = $1
