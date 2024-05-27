@@ -3,12 +3,11 @@ import {LinkShorteningResponse} from '../../lib/types/types';
 import {getSecretValue} from '../utils/getSecretValue';
 
 export const handler = async (event): Promise<LinkShorteningResponse> => {
-    if (!event.body) {
-        return {statusCode: 400, body: 'invalid request, you are missing the parameter body'};
+    if (!event.pathParameters.userId) {
+        return {statusCode: 400, body: 'invalid request, you are missing a path parameter'};
     }
+    const userId = event.pathParameters.userId;
     const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
-
-    const item = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
 
     await using client = await connect({
         user: username,
@@ -17,15 +16,34 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
         password: password,
     });
 
+    const linkIdToUserIdQuery = `
+        DELETE FROM linkuseridtolinksid
+        USING linkuser
+        WHERE linkuseridtolinksid.user_id = linkuser.user_id
+        AND linkuser.user_id = $1;
+    `;
+    const linkQuery = `
+        DELETE FROM links
+        WHERE link_id IN (
+            SELECT link_id FROM linkuseridtolinksid WHERE user_id = $1
+        );
+    `;
+    const linkUserQuery = `
+        DELETE FROM linkuser
+        WHERE user_id = $1;
+    `;
+
+    const params = [userId];
+
     try {
-        const result = await client.query('SELECT * FROM links');
-        console.log(`items: ${item} \n results: ${JSON.stringify(result)}`);
+        await client.query(linkIdToUserIdQuery, params);
+        await client.query(linkQuery, params);
+        await client.query(linkUserQuery, params);
         return {
             statusCode: 200,
-            body: `User Created`,
+            body: `User and links deleted`,
         };
     } catch (dbError) {
-        const errorResponse = `database error: ${dbError}`;
-        return {statusCode: 500, body: errorResponse};
+        return {statusCode: 500, body: `database error: ${dbError}`};
     }
 };
