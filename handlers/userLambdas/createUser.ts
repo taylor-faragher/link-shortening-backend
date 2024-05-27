@@ -8,8 +8,10 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     }
     const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
 
-    const item = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
-
+    const user = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
+    const userId = user.userId;
+    const linkUserName = user.username;
+    const email = user.email;
     await using client = await connect({
         user: username,
         host: host,
@@ -17,12 +19,23 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
         password: password,
     });
 
+    const profileInfo = {};
+
+    const query = `
+        INSERT INTO linkuser (user_id, username, email, profileInfo) 
+        VALUES ($1, $2, $3, $4);
+    `;
+    const params = [userId, linkUserName, email, profileInfo];
+
     try {
-        const result = await client.query('SELECT * FROM links');
-        console.log(`items: ${item} \n results: ${JSON.stringify(result)}`);
+        const result = await client.query(query, params);
+        const record = {
+            result: result,
+        };
+
         return {
             statusCode: 200,
-            body: `User Created`,
+            body: JSON.stringify(record),
         };
     } catch (dbError) {
         const errorResponse = `database error: ${dbError}`;
