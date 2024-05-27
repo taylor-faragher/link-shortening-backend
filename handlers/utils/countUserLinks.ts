@@ -14,7 +14,7 @@ export const countUserLinks = async (client, userId): Promise<boolean> => {
         const linkCount = JSON.parse(
             JSON.stringify(
                 result,
-                (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
+                (_key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
             )
         );
         count = linkCount.rows[0][1];
