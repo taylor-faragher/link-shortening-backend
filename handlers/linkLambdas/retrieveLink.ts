@@ -5,7 +5,7 @@ import {getSecretValue} from '../utils/getSecretValue';
 export const handler = async (event): Promise<LinkShorteningResponse> => {
     const linkId = event.pathParameters.linkId;
     if (!linkId) {
-        return {statusCode: 400, body: 'invalid request, you are missing the path parameter linkId'};
+        return {statusCode: 400, body: 'invalid request, you are missing path parameters'};
     }
     const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
 
