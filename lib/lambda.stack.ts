@@ -96,12 +96,6 @@ export class LambdaStack extends Construct {
             ...nodeJsFunctionProps,
         });
 
-        const retrieveUserForLinkLambda = new NodejsFunction(this, 'retrieveUserForLinkFunction', {
-            entry: path.join(__dirname, '../handlers/userLambdas', 'retrieveUserForLink.ts'),
-            functionName: `${stackPrefix}_retrieveUserForLink`,
-            ...nodeJsFunctionProps,
-        });
-
         const retrieveUserInfoLambda = new NodejsFunction(this, 'retrieveUserInfoFunction', {
             entry: path.join(__dirname, '../handlers/userLambdas', 'retrieveUserInfo.ts'),
             functionName: `${stackPrefix}_retrieveUserInfo`,
@@ -120,19 +114,6 @@ export class LambdaStack extends Construct {
             ...nodeJsFunctionProps,
         });
 
-        // Create a Lambda function for each of the remaining operations for userToLink table
-        const countLinksForUserLambda = new NodejsFunction(this, 'countLinksForUserFunction', {
-            entry: path.join(__dirname, '../handlers/userToLinkLambdas', 'countLinksForUser.ts'),
-            functionName: `${stackPrefix}_countLinksForUser`,
-            ...nodeJsFunctionProps,
-        });
-
-        const createUserLinkLambda = new NodejsFunction(this, 'createUserLinkFunction', {
-            entry: path.join(__dirname, '../handlers/userToLinkLambdas', 'createUserLink.ts'),
-            functionName: `${stackPrefix}_createUserLink`,
-            ...nodeJsFunctionProps,
-        });
-
         // Integrate the Link Lambda functions with the API Gateway resource
         const createLinkIntegration = new LambdaIntegration(createLinkLambda);
         const deleteLinkForUserIntegration = new LambdaIntegration(deleteLinkForUserLambda);
@@ -144,14 +125,9 @@ export class LambdaStack extends Construct {
         const createUserIntegration = new LambdaIntegration(createUserLambda);
         const deleteUserIntegration = new LambdaIntegration(deleteUserLambda);
         const deleteUserAdvancedIntegration = new LambdaIntegration(deleteUserAdvancedLambda);
-        const retrieveUserForLinkIntegration = new LambdaIntegration(retrieveUserForLinkLambda);
         const retrieveUserInfoIntegration = new LambdaIntegration(retrieveUserInfoLambda);
         const updateUserIntegration = new LambdaIntegration(updateUserLambda);
         const updateUserProfileIntegration = new LambdaIntegration(updateUserProfileLambda);
-
-        // Integrate the User to Link Lambda functions with the API Gateway resource
-        const countLinksForUserIntegration = new LambdaIntegration(countLinksForUserLambda);
-        const createUserLinkIntegration = new LambdaIntegration(createUserLinkLambda);
 
         // Create an API Gateway resource for each of the CRUD operations
         const api = new RestApi(this, 'LinkShorteningApiGateway', {
@@ -172,7 +148,6 @@ export class LambdaStack extends Construct {
         const linkUserId = linkId.addResource('{userId}');
         linkUserId.addMethod('PATCH', updateLinkIntegration);
         linkUserId.addMethod('DELETE', deleteLinkForUserIntegration);
-        linkUserId.addMethod('GET', retrieveAllUserLinkIntegration);
         addCorsOptions(linkUserId);
 
         // Design for User Endpoint
@@ -182,8 +157,8 @@ export class LambdaStack extends Construct {
 
         const userId = linkUser.addResource('{userId}');
         userId.addMethod('DELETE', deleteUserIntegration);
-        userId.addMethod('GET', retrieveUserForLinkIntegration);
         userId.addMethod('PATCH', updateUserIntegration);
+        userId.addMethod('GET', retrieveAllUserLinkIntegration);
         addCorsOptions(userId);
 
         // Design for User Profile Endpoint
@@ -198,13 +173,6 @@ export class LambdaStack extends Construct {
         const deleteUserId = deleteUser.addResource('{userId}');
         deleteUserId.addMethod('DELETE', deleteUserAdvancedIntegration);
         addCorsOptions(deleteUserId);
-
-        // Design for UserLink table
-        const userLink = api.root.addResource('userlink');
-        const userLinkId = userLink.addResource('{userId}');
-        userLinkId.addMethod('GET', countLinksForUserIntegration);
-        userLinkId.addMethod('POST', createUserLinkIntegration);
-        addCorsOptions(userLinkId);
     }
 }
 
