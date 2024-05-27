@@ -1,9 +1,10 @@
 import {connect} from 'ts-postgres';
 import {LinkShorteningResponse} from '../../lib/types/types';
 import {getSecretValue} from '../utils/getSecretValue';
+import {mapAllUserLinks} from '../utils/mapAllUserLinks';
 
 export const handler = async (event): Promise<LinkShorteningResponse> => {
-    if (!event.body || event.pathParameters.userId) {
+    if (!event.pathParameters.userId) {
         return {statusCode: 400, body: 'invalid request, you are missing the parameter body'};
     }
     const userId = event.pathParameters.userId;
@@ -27,9 +28,12 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
 
     try {
         const result = await client.query(query, params);
+
+        const records = mapAllUserLinks(result.rows);
+
         return {
             statusCode: 200,
-            body: JSON.stringify(result),
+            body: JSON.stringify(records),
         };
     } catch (dbError) {
         return {statusCode: 500, body: JSON.stringify(dbError)};
