@@ -1,1 +1,0 @@
-INSERT INTO links (url, description) VALUES ('http://example.com', 'Example website', {});
