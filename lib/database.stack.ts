@@ -63,14 +63,15 @@ export class DataBaseStack extends Construct {
             vpc: props.myVpc,
             vpcSubnets: {subnetType: SubnetType.PRIVATE_WITH_EGRESS},
             instanceType,
+            allocatedStorage: 20,
             engine,
             port,
             parameterGroup,
             securityGroups: [databaseSecurityGroup],
             databaseName: dbName,
             credentials: Credentials.fromSecret(creds),
-            backupRetention: Duration.days(0), // disable automatic DB snapshot retention
-            deleteAutomatedBackups: true,
+            // backupRetention: Duration.days(0), // disable automatic DB snapshot retention
+            // deleteAutomatedBackups: true,
             removalPolicy: RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
             instanceIdentifier: dbName,
         });
