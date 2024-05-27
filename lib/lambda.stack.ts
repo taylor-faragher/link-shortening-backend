@@ -162,6 +162,8 @@ export class LambdaStack extends Construct {
         });
         // Design for Link Endpoint
         const link = api.root.addResource('link');
+        link.addMethod('POST', createLinkIntegration);
+        addCorsOptions(link);
 
         const linkId = link.addResource('{linkId}');
         linkId.addMethod('GET', retrieveLinkIntegration);
@@ -170,7 +172,6 @@ export class LambdaStack extends Construct {
         const linkUserId = linkId.addResource('{userId}');
         linkUserId.addMethod('PATCH', updateLinkIntegration);
         linkUserId.addMethod('DELETE', deleteLinkForUserIntegration);
-        linkUserId.addMethod('POST', createLinkIntegration);
         linkUserId.addMethod('GET', retrieveAllUserLinkIntegration);
         addCorsOptions(linkUserId);
 
