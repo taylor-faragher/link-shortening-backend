@@ -143,12 +143,9 @@ export class LambdaStack extends Construct {
 
         const linkId = link.addResource('{linkId}');
         linkId.addMethod('GET', retrieveLinkIntegration);
+        linkId.addMethod('Put', updateLinkIntegration);
+        linkId.addMethod('DELETE', deleteLinkForUserIntegration);
         addCorsOptions(linkId);
-
-        const linkUserId = linkId.addResource('{userId}');
-        linkUserId.addMethod('PATCH', updateLinkIntegration);
-        linkUserId.addMethod('DELETE', deleteLinkForUserIntegration);
-        addCorsOptions(linkUserId);
 
         // Design for User Endpoint
         const linkUser = api.root.addResource('user');
@@ -157,7 +154,7 @@ export class LambdaStack extends Construct {
 
         const userId = linkUser.addResource('{userId}');
         userId.addMethod('DELETE', deleteUserIntegration);
-        userId.addMethod('PATCH', updateUserIntegration);
+        userId.addMethod('PUT', updateUserIntegration);
         userId.addMethod('GET', retrieveAllUserLinkIntegration);
         addCorsOptions(userId);
 
