@@ -12,6 +12,7 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     const userId = user.userId;
     const linkUserName = user.username;
     const email = user.email;
+
     await using client = await connect({
         user: username,
         host: host,
