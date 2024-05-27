@@ -3,12 +3,11 @@ import {LinkShorteningResponse} from '../../lib/types/types';
 import {getSecretValue} from '../utils/getSecretValue';
 
 export const handler = async (event): Promise<LinkShorteningResponse> => {
-    if (!event.body) {
-        return {statusCode: 400, body: 'invalid request, you are missing the parameter body'};
+    if (!event.pathParameters.userId) {
+        return {statusCode: 400, body: 'invalid request, you are missing a path parameter'};
     }
+    const userId = event.pathParameters.userId;
     const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
-
-    const item = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
 
     await using client = await connect({
         user: username,
@@ -17,12 +16,18 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
         password: password,
     });
 
+    const query = `
+        DELETE FROM linkuser 
+            WHERE user_id = $1;
+    `;
+
+    const params = [userId];
+
     try {
-        const result = await client.query('SELECT * FROM links');
-        console.log(`items: ${item} \n results: ${JSON.stringify(result)}`);
+        const result = await client.query(query, params);
         return {
             statusCode: 200,
-            body: `User Created`,
+            body: JSON.stringify(result),
         };
     } catch (dbError) {
         const errorResponse = `database error: ${dbError}`;
