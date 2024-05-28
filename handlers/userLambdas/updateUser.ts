@@ -32,19 +32,19 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
 
     const query = `
         UPDATE linkuser 
-        SET username = $1
-        SET email = $2
-        SET profile = $3
-        WHERE user_id = $4;
+        SET username = $1,
+        email = $2,
+        profileInfo = $3
+            WHERE user_id = $4;
     `;
 
-    const params = [username, email, profileInfo, userId];
+    const params = [getUsername, email, profileInfo, userId];
 
     try {
-        const result = await client.query(query, params);
+        await client.query(query, params);
         return {
             statusCode: 200,
-            body: JSON.stringify(result),
+            body: 'User Updated Successfully',
         };
     } catch (dbError) {
         const errorResponse = `database error: ${dbError}`;
