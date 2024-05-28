@@ -90,12 +90,6 @@ export class LambdaStack extends Construct {
             ...nodeJsFunctionProps,
         });
 
-        const deleteUserAdvancedLambda = new NodejsFunction(this, 'deleteUserAdvancedFunction', {
-            entry: path.join(__dirname, '../handlers/userLambdas', 'deleteUserAdvanced.ts'),
-            functionName: `${stackPrefix}_deleteUserAdvanced`,
-            ...nodeJsFunctionProps,
-        });
-
         const retrieveUserInfoLambda = new NodejsFunction(this, 'retrieveUserInfoFunction', {
             entry: path.join(__dirname, '../handlers/userLambdas', 'retrieveUserInfo.ts'),
             functionName: `${stackPrefix}_retrieveUserInfo`,
@@ -114,6 +108,12 @@ export class LambdaStack extends Construct {
             ...nodeJsFunctionProps,
         });
 
+        const retrieveUserProfileLambda = new NodejsFunction(this, 'retrieveUserProfileFunction', {
+            entry: path.join(__dirname, '../handlers/userLambdas', 'retrieveUserProfile.ts'),
+            functionName: `${stackPrefix}_retrieveUserProfile`,
+            ...nodeJsFunctionProps,
+        });
+
         // Integrate the Link Lambda functions with the API Gateway resource
         const createLinkIntegration = new LambdaIntegration(createLinkLambda);
         const deleteLinkForUserIntegration = new LambdaIntegration(deleteLinkForUserLambda);
@@ -124,10 +124,10 @@ export class LambdaStack extends Construct {
         // Integrate the User Lambda functions with the API Gateway resource
         const createUserIntegration = new LambdaIntegration(createUserLambda);
         const deleteUserIntegration = new LambdaIntegration(deleteUserLambda);
-        const deleteUserAdvancedIntegration = new LambdaIntegration(deleteUserAdvancedLambda);
         const retrieveUserInfoIntegration = new LambdaIntegration(retrieveUserInfoLambda);
         const updateUserIntegration = new LambdaIntegration(updateUserLambda);
         const updateUserProfileIntegration = new LambdaIntegration(updateUserProfileLambda);
+        const retrieveUserProfileIntegration = new LambdaIntegration(retrieveUserProfileLambda);
 
         // Create an API Gateway resource for each of the CRUD operations
         const api = new RestApi(this, 'LinkShorteningApiGateway', {
@@ -155,21 +155,21 @@ export class LambdaStack extends Construct {
         const userId = linkUser.addResource('{userId}');
         userId.addMethod('DELETE', deleteUserIntegration);
         userId.addMethod('PUT', updateUserIntegration);
-        userId.addMethod('GET', retrieveAllUserLinkIntegration);
+        userId.addMethod('GET', retrieveUserInfoIntegration);
+
         addCorsOptions(userId);
 
         // Design for User Profile Endpoint
         const profile = api.root.addResource('profile');
         const profileForUser = profile.addResource('{userId}');
-        profileForUser.addMethod('GET', retrieveUserInfoIntegration);
+        profileForUser.addMethod('GET', retrieveUserProfileIntegration);
         profileForUser.addMethod('PATCH', updateUserProfileIntegration);
         addCorsOptions(profileForUser);
 
-        // Design for Termination Endpoint. Really hope this is never used and gets deleted later
-        const deleteUser = api.root.addResource('terminate');
-        const deleteUserId = deleteUser.addResource('{userId}');
-        deleteUserId.addMethod('DELETE', deleteUserAdvancedIntegration);
-        addCorsOptions(deleteUserId);
+        // Design for userlinks Endpoint
+        const userLinks = api.root.addResource('userlinks');
+        const userLinksId = userLinks.addResource('{userId}');
+        userLinksId.addMethod('GET', retrieveAllUserLinkIntegration);
     }
 }
 
