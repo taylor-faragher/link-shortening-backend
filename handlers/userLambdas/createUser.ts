@@ -12,6 +12,7 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     const userId = user.userId;
     const linkUserName = user.username;
     const email = user.email;
+    const profileInfo = user.profile;
 
     await using client = await connect({
         user: username,
@@ -19,8 +20,6 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
         database: dbname,
         password: password,
     });
-
-    const profileInfo = {};
 
     const query = `
         INSERT INTO linkuser (user_id, username, email, profileInfo) 
