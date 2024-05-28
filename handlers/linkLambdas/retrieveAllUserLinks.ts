@@ -2,6 +2,7 @@ import {connect} from 'ts-postgres';
 import {LinkShorteningResponse} from '../../lib/types/types';
 import {getSecretValue} from '../utils/getSecretValue';
 import {mapAllUserLinks} from '../utils/mapAllUserLinks';
+import {countUserLinks} from '../utils/countUserLinks';
 
 export const handler = async (event): Promise<LinkShorteningResponse> => {
     if (!event.pathParameters.userId) {
@@ -17,6 +18,7 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
         database: dbname,
         password: password,
     });
+    const {countNumber} = await countUserLinks(client, userId);
 
     const query = `
         SELECT l.* FROM links l
@@ -29,7 +31,12 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     try {
         const result = await client.query(query, params);
 
-        const records = mapAllUserLinks(result.rows);
+        const mappedResult = mapAllUserLinks(result.rows);
+
+        const records = {
+            count: countNumber,
+            links: mappedResult,
+        };
 
         return {
             statusCode: 200,
