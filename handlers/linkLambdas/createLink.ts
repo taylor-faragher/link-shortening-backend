@@ -24,9 +24,9 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
         password: password,
     });
 
-    const linkCount = await countUserLinks(client, userId);
-    if (!linkCount) {
-        return {statusCode: 400, body: `We're sorry. You have created too many links.`};
+    const {valid, countNumber} = await countUserLinks(client, userId);
+    if (valid) {
+        return {statusCode: 400, body: `We're sorry. You have created too many links. Count: ${countNumber}`};
     }
 
     const linkId = await createLinkId(client);
@@ -53,6 +53,7 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
             link_url: row.get('link_url'),
             description: row.get('description'),
             status: result.status,
+            count: countNumber + 1, //represents an accurate count after creation
         };
         return {
             statusCode: 200,
