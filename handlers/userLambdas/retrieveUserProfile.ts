@@ -27,10 +27,11 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
 
     try {
         const result = await client.query(query, params);
+        const record = result.rows[0][0];
 
         return {
             statusCode: 200,
-            body: JSON.stringify(result),
+            body: JSON.stringify(record),
         };
     } catch (dbError) {
         const errorResponse = `database error: ${dbError}`;
