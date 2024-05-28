@@ -1,1 +1,0 @@
-DELETE FROM linkuser WHERE user_id = 1;
