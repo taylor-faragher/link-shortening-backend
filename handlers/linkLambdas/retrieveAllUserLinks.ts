@@ -1,8 +1,7 @@
-import {connect} from 'ts-postgres';
 import {LinkShorteningResponse} from '../../lib/types/types';
-import {getSecretValue} from '../utils/getSecretValue';
 import {mapAllUserLinks} from '../utils/mapAllUserLinks';
 import {countUserLinks} from '../utils/countUserLinks';
+import {getDBClient} from '../utils/getDBClient';
 
 export const handler = async (event): Promise<LinkShorteningResponse> => {
     if (!event.pathParameters.userId) {
@@ -10,14 +9,8 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     }
     const userId = event.pathParameters.userId;
 
-    const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
+    await using client = await getDBClient();
 
-    await using client = await connect({
-        user: username,
-        host: host,
-        database: dbname,
-        password: password,
-    });
     const {countNumber} = await countUserLinks(client, userId);
 
     const query = `

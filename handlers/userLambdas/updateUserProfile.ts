@@ -1,6 +1,5 @@
-import {connect} from 'ts-postgres';
 import {LinkShorteningResponse} from '../../lib/types/types';
-import {getSecretValue} from '../utils/getSecretValue';
+import {getDBClient} from '../utils/getDBClient';
 
 export const handler = async (event): Promise<LinkShorteningResponse> => {
     if (!event.body) {
@@ -10,17 +9,12 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     if (!event.pathParameters.userId) {
         return {statusCode: 400, body: 'invalid request, you are missing path parameters'};
     }
+
+    await using client = await getDBClient();
+
     const userId = event.pathParameters.userId;
-    const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
 
     const profileInfo = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
-
-    await using client = await connect({
-        user: username,
-        host: host,
-        database: dbname,
-        password: password,
-    });
 
     const query = `
         UPDATE linkuser

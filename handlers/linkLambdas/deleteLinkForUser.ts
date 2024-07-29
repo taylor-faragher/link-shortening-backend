@@ -1,21 +1,14 @@
-import {connect} from 'ts-postgres';
 import {LinkShorteningResponse} from '../../lib/types/types';
-import {getSecretValue} from '../utils/getSecretValue';
+import {getDBClient} from '../utils/getDBClient';
 
 export const handler = async (event): Promise<LinkShorteningResponse> => {
     const linkId = event.pathParameters.linkId;
+
     if (!linkId) {
         return {statusCode: 400, body: 'invalid request, you are missing path parameters'};
     }
 
-    const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
-
-    await using client = await connect({
-        user: username,
-        host: host,
-        database: dbname,
-        password: password,
-    });
+    await using client = await getDBClient();
 
     const query = `
         DELETE FROM links 

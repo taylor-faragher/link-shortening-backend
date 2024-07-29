@@ -1,12 +1,12 @@
-import {connect} from 'ts-postgres';
 import {LinkShorteningResponse} from '../../lib/types/types';
-import {getSecretValue} from '../utils/getSecretValue';
+import {getDBClient} from '../utils/getDBClient';
 
 export const handler = async (event): Promise<LinkShorteningResponse> => {
     if (!event.body) {
         return {statusCode: 400, body: 'invalid request, you are missing the parameter body'};
     }
-    const {password, username, host, dbname} = await getSecretValue('LinkShortenerMasterSecret');
+
+    await using client = await getDBClient();
 
     const user = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
     const userId = user.userId;
@@ -14,17 +14,11 @@ export const handler = async (event): Promise<LinkShorteningResponse> => {
     const email = user.email;
     const profileInfo = user.profile;
 
-    await using client = await connect({
-        user: username,
-        host: host,
-        database: dbname,
-        password: password,
-    });
-
     const query = `
         INSERT INTO linkuser (user_id, username, email, profileInfo) 
         VALUES ($1, $2, $3, $4);
     `;
+
     const params = [userId, linkUserName, email, profileInfo];
 
     try {
